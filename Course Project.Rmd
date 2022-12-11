@@ -1,0 +1,103 @@
+---
+title: "Regression Models Course Project"
+author: "Kunal Bhardwaj"
+date: "2022-09-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Executive Summary
+
+Motor Trend Magazine is interested in exploring the relationship between a set of variables and miles per gallon (MPG). They are particularly interested in the following two questions:
+
+1. Is an automatic or manual transmission better for MPG?
+2. Quantify the MPG difference between automatic and manual transmissions
+
+
+After performing this analysis, I will show that:
+
+When measuring MPG, manual transmissions perform better than automatic transmissions, however this single factor only accounts for 33.85% of the explanation.
+When measuring MPG, manual transmissions provide additional performance over automatic transmissions when taking into account three additional explanatory variables (cylinders, horsepower & weight). These additional factors, along with transmission type, account for 82.67% of the explanation.
+
+## Exploratory Data Analysis
+
+```{r}
+
+#Data set:
+library(datasets)
+data(mtcars)
+
+#Sample view of the data set:
+head(mtcars)
+
+#Statistical summary of MPG variable:
+summary(mtcars$mpg)
+
+#Automatic vs Manual Transmission stats:
+transStats = split(mtcars$mpg, mtcars$am)
+
+#Mean:
+sapply(transStats, mean)
+
+#Standard Deviation:
+sapply(transStats, sd)
+
+#Range:
+sapply(transStats, range)
+
+#Automatic vs Manual Transmission Hypothesis Test:
+autoTrans <- mtcars[mtcars$am == "0",]
+manTrans <- mtcars[mtcars$am == "1",]
+t.test(autoTrans$mpg, manTrans$mpg)
+
+```
+
+
+## Regression Models
+1. Linear Regression Model
+
+A simple linear regression model is first conducted to find out how much of an affect transmission type actually has on gas mileage performance, which is our initial claim supported by our our preliminary exploratory data analysis.
+
+```{r}
+fit1 <- lm(mpg ~ am, mtcars)
+summary(fit1)
+
+```
+The p-value are low (0.000285) and R-Squared is 0.3385. Thus, based upon the R-squared value, transmission types only explain 33.85% of the MPG performance. Therefore the Linear Regression Model is inadequate in deciding the impact of transmission type to MPG.
+
+Thus, a multivariable Regression Model has been carried out, choosing transmission type, Cylinder count, Horsepower and weight as predictors.
+
+2. Multivariable Regression Model
+```{r}
+fit2 <- lm(mpg~am + cyl + hp + wt, mtcars)
+summary(fit2)
+
+```
+The R-squared value improved to 0.8267 but the p-value for transmission type is no longer significant.
+
+This second model provided the following results: Thus, based upon the R-squared value, these variables explain 82.67% of the MPG performance.
+
+## Conclusion
+1. With a p < 0.05 confidence, cars with manual transmission have more miles per gallon (MPG) than automatic transmissions.
+
+2. If we have more observations available, with same cars model, using manual and automatic transmission, could help us better answer the second question about: Quantify the MPG difference between automatica and manual transmissions? The database with only 32 observations may not have been enough to answer more clearly the second question.
+
+## Appendix
+```{r}
+#Visualization of Automatic vs Manual Transmission:
+library(ggplot2)
+mtcars$am <- as.factor(mtcars$am)
+transTyp <- ggplot(aes(x=am, y=mpg), data=mtcars) + geom_boxplot(aes(fill=am))
+transTyp <- transTyp + labs(title = "Automatic vs Manual Transmission") + xlab("Transmission Type") + ylab("Miles Per Gallon (MPG)")
+transTyp
+
+#Scatterplot matrix of the dataset:
+pairs(mpg ~ ., data = mtcars)
+
+#Scatterplots of the multivariable regression model residuals:
+par(mfrow = c(2,2))
+plot(fit2)
+```
